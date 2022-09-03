@@ -14,6 +14,10 @@ export class SearchBar extends Component {
     name: '',
   };
 
+  static propTypes = {
+    onSubmit: PropTypes.func.isRequired,
+  };
+
   onInputChange = e => {
     this.setState({ name: e.target.value });
   };

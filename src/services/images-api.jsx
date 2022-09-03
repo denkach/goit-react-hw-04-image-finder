@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 const API_KEY = '28410112-890d31eb018b119befebb0576';
 
 const fetchImage = name => {
