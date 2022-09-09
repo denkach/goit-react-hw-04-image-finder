@@ -4,6 +4,7 @@ import { SearchBar } from './SearchBar/SearchBar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
+import { Loader } from './Loader/Loader';
 import imagesAPI from '../services/images-api';
 
 const Status = {
@@ -31,7 +32,11 @@ export class App extends Component {
     const images = this.state.images;
 
     if (prevName !== nextName || prevPage !== nextPage) {
-      if (images.length === 0 || prevName !== nextName) {
+      if (
+        images.length === 0 ||
+        prevName !== nextName ||
+        prevPage !== nextPage
+      ) {
         this.setState({ status: Status.PENDING });
       }
 
@@ -41,15 +46,24 @@ export class App extends Component {
           if (hits.length === 0) {
             return Promise.reject(new Error('No images found'));
           }
+          const images = hits.map(image => {
+            const img = {
+              id: image.id,
+              webformatURL: image.webformatURL,
+              largeImageURL: image.largeImageURL,
+            };
+            return img;
+          });
+
           this.setState(prevState => {
             return prevName !== nextName
               ? {
-                  images: hits,
+                  images: images,
                   status: Status.RESOLVED,
                   error: '',
                 }
               : {
-                  images: [...prevState.images, ...hits],
+                  images: [...prevState.images, ...images],
                   status: Status.RESOLVED,
                   error: '',
                 };
@@ -91,15 +105,31 @@ export class App extends Component {
     return (
       <Box display="grid" gridTemplateColumns="1fr" gridGap="16px" pb="24px">
         <SearchBar onSubmit={this.onFormSubmit} />
-        <ImageGallery
-          error={error}
-          images={images}
-          status={status}
-          onClick={this.onGalleryItemClick}
-        />
+        {status === 'idle' && (
+          <Box display="flex" alignItems="center" justifyContent="center">
+            <div>Enter title of image.</div>
+          </Box>
+        )}
+        {images.length > 0 && (
+          <ImageGallery images={images} onClick={this.onGalleryItemClick} />
+        )}
+
         {images && images.length > 0 && status === 'resolved' && (
           <Button onClick={this.onBtnClick} />
         )}
+
+        {status === 'pending' && (
+          <Box display="flex" alignItems="center" justifyContent="center">
+            <Loader />
+          </Box>
+        )}
+
+        {status === 'rejected' && (
+          <Box display="flex" alignItems="center" justifyContent="center">
+            {error}
+          </Box>
+        )}
+
         {showModal && (
           <Modal largeImageURL={modalImageSrc} onClose={this.toggleModal} />
         )}
